@@ -31,14 +31,23 @@ MainWindow::MainWindow(QWidget *parent)
 
     });
 
+    connect(client, &TCPclient::sig_connectStatus, this, &MainWindow::DisplayConnectStatus);
 
+    connect(client, &TCPclient::sig_Error, this, &MainWindow::DisplayError);
 
  /*
   * Соединяем сигналы со слотами
-*/
-    connect(client, &TCPclient::sig_sendTime, this, &MainWindow::DisplayTime);
-    connect(client, &TCPclient::sig_connectStatus, this, &MainWindow::DisplayConnectStatus);
+ */
 
+    connect(client, &TCPclient::sig_sendTime, this, &MainWindow::DisplayTime);
+
+    connect(client, &TCPclient::sig_sendFreeSize, this, &MainWindow::DisplayFreeSpace);
+
+    connect(client, &TCPclient::sig_sendStat, this, &MainWindow::DisplayStat);
+
+    connect(client, &TCPclient::sig_SendReplyForSetData, this, &MainWindow::SetDataReply);
+
+    connect(client, &TCPclient::sig_Success, this, &MainWindow::DisplaySuccess);
 }
 
 MainWindow::~MainWindow()
@@ -55,27 +64,34 @@ void MainWindow::DisplayTime(QDateTime time)
 }
 void MainWindow::DisplayFreeSpace(uint32_t freeSpace)
 {
-
+    ui->tb_result->append("Свободное место на сервере: " + QString::number(freeSpace));
 }
 void MainWindow::SetDataReply(QString replyString)
 {
-
+    ui->tb_result->append("Вернувшаяся строка: " + replyString);
 }
 void MainWindow::DisplayStat(StatServer stat)
 {
-
+    ui->tb_result->append("Статистика сервера:"
+                          "\nКоличество принятых байт: "          + QString::number(stat.incBytes)  +
+                          "\nКоличество переданных байт: "        + QString::number(stat.sendBytes) +
+                          "\nКоличество принятых пакетов	: "   + QString::number(stat.revPck)    +
+                          "\nКоличество переданных пакетов	: "   + QString::number(stat.sendPck)   +
+                          "\nВремя работы сервера: "              + QString::number(stat.workTime)  + " сек" +
+                          "\nКоличество подключённых клиентов: "  + QString::number(stat.clients));
 }
 void MainWindow::DisplayError(uint16_t error)
 {
     switch (error) {
-    case ERR_NO_FREE_SPACE:{
+    case ERR_NO_FREE_SPACE:
         ui->tb_result->append("Недостаточно свободного места на сервере");
         break;
-    }
-    case ERR_NO_FUNCT:{
-
+    case ERR_CONNECT_TO_HOST:
+        ui->tb_result->append("Не указана длина сообщения в заголовке");
+        break;
+    case ERR_NO_FUNCT:
         ui->tb_result->append("Функционал не реализован");
-    }
+        break;
     default:
         break;
     }
@@ -84,11 +100,17 @@ void MainWindow::DisplayError(uint16_t error)
  * \brief Метод отображает квитанцию об успешно выполненном сообщениии
  * \param typeMess ИД успешно выполненного сообщения
  */
-void MainWindow::DisplaySuccess(uint16_t typeMess)
+void MainWindow::DisplaySuccess(uint8_t typeMess)
 {
     switch (typeMess) {
-    case CLEAR_DATA:
+    case STATUS_SUCCES:
+        ui->tb_result->append("Провозглашаю, что в первый день января 1863 года от Рождества Христова все байты, "
+                              "удерживаемые как рабы на территории какого бы то ни было сервера или части сервера, "
+                              "данные которых находится в состоянии мятежа против Соединенных Серверов, "
+                              "с того времени и навечно объявляются свободными.");
+        break;
     default:
+        ui->tb_result->append("Север пал!");
         break;
     }
 
@@ -158,26 +180,31 @@ void MainWindow::on_pb_request_clicked()
 
    switch (ui->cb_request->currentIndex()){
 
-       //Получить время
-       case 0:{
-           header.idData = GET_TIME;
-           break;
-       }
-       //Получить свободное место
-       case 1:
+   case 0:
+       header.idData = GET_TIME;
+       break;
+   case 1:
        header.idData = GET_SIZE;
-       //Получить статистику
-       case 2:
+       break;
+   case 2:
        header.idData = GET_STAT;
-       //Отправить данные
-       case 3:
+       break;
+   case 3:{
        header.idData = SET_DATA;
-       //Очистить память на сервере
-       case 4:
-       header.idData = CLEAR_DATA;
-       default:
-       ui->tb_result->append("Такой запрос не реализован в текущей версии");
+
+       QString txt2send = ui->le_data->text();
+
+       header.len = txt2send.size();
+
+       client->SendData(header, txt2send);
        return;
+   }
+   case 4:
+       header.idData = CLEAR_DATA;
+       break;
+   default:
+   ui->tb_result->append("Такой запрос не реализован в текущей версии");
+   return;
 
    }
 

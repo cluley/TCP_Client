@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.5)
 
-project(10_TCPclient VERSION 0.1 LANGUAGES CXX)
+project(TCPclient VERSION 0.1 LANGUAGES CXX)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
@@ -26,14 +26,14 @@ set(PROJECT_SOURCES
 )
 
 
-qt_add_executable(10_TCPclient
+qt_add_executable(TCPclient
     MANUAL_FINALIZATION
     ${PROJECT_SOURCES}
 )
 
 
-target_link_libraries(10_TCPclient PRIVATE Qt6::Widgets
+target_link_libraries(TCPclient PRIVATE Qt6::Widgets
                                            Qt6::Network)
 
-qt_finalize_executable(10_TCPclient)
+qt_finalize_executable(TCPclient)
 

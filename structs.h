@@ -8,7 +8,9 @@
 #define TYPE_REQ 10
 #define TYPE_ANS 20
 
+
 #pragma pack(push, 1)
+
 
 enum Messages{
 
@@ -27,6 +29,9 @@ enum StatusMessages{
     ERR_CONNECT_TO_HOST = 11,
 
     ERR_NO_FUNCT = 20   //Функционал не реализован
+
+
+
 };
 
 
@@ -37,9 +42,8 @@ struct ServiceHeader{
 
     uint16_t id = ID;     //Идентификатор начала пакета
     uint16_t idData = 0;  //Идентификатор типа данных
-    uint8_t  status = 0;  //Тип сообщения (запрос/ответ)
+    uint8_t status = 0;   //Тип сообщения (запрос/ответ)
     uint32_t len = 0;     //Длина пакета далее, байт
-
 };
 
 struct StatServer{
