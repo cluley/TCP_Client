@@ -170,55 +170,44 @@ void TCPclient::ReadyReed()
 
 void TCPclient::ProcessingData(ServiceHeader header, QDataStream &stream)
 {
-    switch(header.status){
 
-    case ERR_NO_FREE_SPACE:
-        emit sig_Error(ERR_NO_FREE_SPACE);
-        return;
-    case ERR_CONNECT_TO_HOST:
-        emit sig_Error(ERR_CONNECT_TO_HOST);
-        return;
-    case ERR_NO_FUNCT:
-        emit sig_Error(ERR_NO_FUNCT);
-        return;
-    default:
-        break;
+    if(header.status != STATUS_SUCCES){
+        emit sig_Error(header.status);
+    }
+    else{
+        switch (header.idData){
 
-    }
-
-    switch (header.idData){
-
-    case GET_TIME:{
-        QDateTime time;
-        stream >> time;
-        emit sig_sendTime(time);
-        break;
-    }
-    case GET_SIZE:{
-        uint32_t freeSpace;
-        stream >> freeSpace;
-        emit sig_sendFreeSize(freeSpace);
-        break;
-    }
-    case GET_STAT:{
-        StatServer stat;
-        stream >> stat;
-        emit sig_sendStat(stat);
-        break;
-    }
-    case SET_DATA:{
-        QString replyString;
-        stream >> replyString;
-        emit sig_SendReplyForSetData(replyString);
-        break;
-    }
-    case CLEAR_DATA:{
-        emit sig_Success(header.status);
-        break;
-    }
-    default:
-        return;
-
+            case GET_TIME:{
+                QDateTime time;
+                stream >> time;
+                emit sig_sendTime(time);
+                break;
+            }
+            case GET_SIZE:{
+                uint32_t freeSpace;
+                stream >> freeSpace;
+                emit sig_sendFreeSize(freeSpace);
+                break;
+            }
+            case GET_STAT:{
+                StatServer stat;
+                stream >> stat;
+                emit sig_sendStat(stat);
+                break;
+            }
+            case SET_DATA:{
+                QString replyString;
+                stream >> replyString;
+                emit sig_SendReplyForSetData(replyString);
+                break;
+            }
+            case CLEAR_DATA:{
+                emit sig_Success(header.status);
+                break;
+            }
+            default:
+                return;
+        }
     }
 
 }
